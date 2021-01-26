@@ -1,57 +1,46 @@
-import React, {useState, useEffect} from 'react';
-import './App.css';
-import axios from 'axios';
+import React from 'react';
+import CssBaseLine from '@material-ui/core/CssBaseline';
+import {BrowserRouter, Switch, Route, Link as RouterLink} from 'react-router-dom';
+import {Container, AppBar, Link, Paper, Grid} from '@material-ui/core';
+import {TodosPage} from './components/todos/TodosPage';
 
-interface Task {
-  id: string;
-  name: string;
-}
-interface Todo {
-  id: string;
-  name: string;
-  description: string;
-  tasks: Task[];
-}
 
 function App() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-
-  function loadTodos() {
-    axios.get('http://localhost:4000/todos')
-    .then(res => {
-      const {todos} = res.data;
-      console.log(todos);
-      setTodos(todos);
-    })
-    .catch(e => {
-      console.log(e);
-    })
-  }
-  useEffect(() => {
-    loadTodos();
-  },[])
 
   return (
-    <div className="App">
-      <div>
-        {todos.map(todo => {
-          const {id, name, description, tasks} = todo;
-          const subTasks = tasks.map(task => {
-            const {id, name} = task;
-            return (
-              <span key={id}>{name}</span>
-            )
-          })
-          return (
-            <div key={id}>
-              <p>{`할 일 : ${name}`}</p>
-              <p>{`설명 : ${description}`}</p>
-              <p>{`세부 할 일 : ${subTasks}`}</p>
-              </div>
-          )
-        })}
+    <Container>
+      <CssBaseLine/>
+      <div className="App">
+        <BrowserRouter>
+          <AppBar position="static">
+            <Grid container justify="space-around">
+              <Link color="secondary" component={RouterLink} to="/">home</Link>
+              <Link color="secondary" component={RouterLink} to="/todos">todos</Link>
+              <Link color="secondary" component={RouterLink} to="/login">login</Link>
+              <Link color="secondary" component={RouterLink} to="/signup">signup</Link>
+            </Grid>
+          </AppBar>
+
+          <Paper>
+            <Switch>
+              <Route exact path="/">
+                home
+              </Route>
+              <Route path="/todos">
+                <TodosPage />
+              </Route>
+              <Route path="/login">
+                login
+              </Route>
+              <Route path="/signup">
+                signup
+              </Route>
+            </Switch>
+          </Paper>
+        
+        </BrowserRouter>
       </div>
-    </div>
+    </Container>
   );
 }
 

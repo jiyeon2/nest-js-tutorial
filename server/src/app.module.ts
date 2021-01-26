@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
-import { MoviesModule } from './movies/movies.module';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { CatsModule } from './cats/cats.module';
 import { TodosModule } from './todos/todos.module';
 
 @Module({
@@ -20,10 +18,8 @@ import { TodosModule } from './todos/todos.module';
       synchronize: true,
       autoLoadEntities: true,
     }),
-    MoviesModule,
     AuthModule,
     UsersModule,
-    CatsModule,
     TodosModule,
   ],
   controllers: [AppController],

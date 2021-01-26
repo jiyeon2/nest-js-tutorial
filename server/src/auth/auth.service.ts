@@ -1,6 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt'; // jwt payload를 할당하는 유틸리티 함수 가지고 있음
+import { JwtPayload } from './interface/payload.interface';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { RegistrationStatus } from './interface/registration-status.interface';
+import { UserDto } from 'src/users/dto/user.dto';
+import { LoginUserDto } from '../users/dto/login-user.dto';
+import 'dotenv/config';
 
 @Injectable()
 export class AuthService {
@@ -9,19 +15,51 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOne(username);
-    if (user && user.password === pass) {
-      const { password, ...result } = user;
-      return result;
+  async register(userDto: CreateUserDto): Promise<RegistrationStatus> {
+    let status = {
+      success: true,
+      message: 'user registered',
+    };
+
+    try {
+      await this.usersService.create(userDto);
+    } catch (error) {
+      status = {
+        success: false,
+        message: error.message,
+      };
     }
-    return null;
+    return status;
   }
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user.userId };
+  // jwt strategy에서 유저 유효한지 확인할 때 사용
+  async validateUser(payload: JwtPayload): Promise<UserDto> {
+    const user = await this.usersService.findByPayload(payload);
+    // passport.js 미들웨어가 거친 후 토큰이 유효한 경우에 한해 JwtStrategy.validate()함수에서 호출된다
+    if (!user) {
+      throw new HttpException('invalid token', HttpStatus.UNAUTHORIZED);
+    }
+    return user;
+  }
+
+  async login(loginUserDto: LoginUserDto) {
+    // db에서 유저가 있는지, 패스워드가 맞는지 확인
+    const user = await this.usersService.findByLogin(loginUserDto);
+
+    // 토큰생성
+    const token = this._createToken(user);
+
+    return { username: user.username, ...token };
+  }
+
+  private _createToken({ username }: UserDto) {
+    const user: JwtPayload = { username };
+    // payload는 내용
+    const accessToken = this.jwtService.sign(user);
+    // accessToken 은 할당된 토큰과 현재 유저의 이름(username)반환한다
     return {
-      access_token: this.jwtService.sign(payload),
+      expiresIn: process.env.EXPIRESIN,
+      accessToken,
     };
   }
 }

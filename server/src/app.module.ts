@@ -1,20 +1,11 @@
-import {
-  Module,
-  NestModule,
-  MiddlewareConsumer,
-  RequestMethod,
-} from '@nestjs/common';
-import {
-  LoggerMiddleware,
-  logger,
-} from './common/middleware/logger.middleware';
+import { Module } from '@nestjs/common';
 import { MoviesModule } from './movies/movies.module';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CatsModule } from './cats/cats.module';
-import { CatsController } from './cats/cats.controller';
+import { TodosModule } from './todos/todos.module';
 
 @Module({
   imports: [
@@ -33,20 +24,9 @@ import { CatsController } from './cats/cats.controller';
     AuthModule,
     UsersModule,
     CatsModule,
+    TodosModule,
   ],
   controllers: [AppController],
   providers: [],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(logger)
-      // .exclude(
-      //   { path: 'cats', method: RequestMethod.GET },
-      //   { path: 'cats', method: RequestMethod.POST },
-      //   'cats/(.*)',
-      // )
-      // .forRoutes(CatsController);
-      .forRoutes({ path: 'cats', method: RequestMethod.GET });
-  }
-}
+export class AppModule {}

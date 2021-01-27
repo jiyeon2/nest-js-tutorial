@@ -2,7 +2,8 @@ import React, {useEffect, useState} from 'react';
 import {Grid, TextField, Button} from '@material-ui/core';
 import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import {TodosList} from './TodosList';
-import axios from 'axios';
+import {useHistory} from 'react-router-dom';
+import axios, {AxiosError} from 'axios';
 
 const useTodosFormStyle = makeStyles((theme: Theme) => createStyles({
   form: {
@@ -29,6 +30,7 @@ export interface Todo{
 }
 
 export function TodosPage():JSX.Element{
+  const history = useHistory();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [todoTitle, setTodoTitle] = useState<string>('');
   const [todoDesc, setTodoDesc] = useState<string>('');
@@ -51,8 +53,14 @@ export function TodosPage():JSX.Element{
   }
 
   function addTodo(){
-    // 로그인 후 토큰 따로 저장해두기... 아직 로그인 폼 안만듦
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFubmUiLCJpYXQiOjE2MTE2NzI5OTUsImV4cCI6MTYxMjg4MjU5NX0.Dj-txB34M0GOuAVKJlmwwddP7CD_--LoCFedFnjpBZc"
+    
+    const token = localStorage.getItem('accessToken');
+
+    if (!token){
+      alert('로그인 후 작성이 가능합니다. 로그인 해주세요');
+      history.push('/login');
+    }
+
     const config ={
       headers: {Authorization: `Bearer ${token}`}
     };
@@ -61,16 +69,34 @@ export function TodosPage():JSX.Element{
       name: todoTitle,
       description: todoDesc
     }
+
     axios.post(
       'http://localhost:4000/todos',
       param,
       config
     ).then(res => {
-      console.log(res);
-      setTodoDesc('');
-      setTodoTitle('');
-      loadTodos();
+      if (res.status === 201){
+        setTodoDesc('');
+        setTodoTitle('');
+        loadTodos();
+      }
+    }).catch((e:AxiosError) => {
+      if (e.response?.status === 401){
+        localStorage.setItem('accessToken','');
+        alert('토큰이 만료되었습니다');
+        // 만약 로그아웃 안했으면
+        refreshToken();
+        // history.push('/login');
+      }
     });
+  }
+
+  function refreshToken(){
+    axios.post('http://localhost:4000/auth/refresh-token').then(res => {
+      console.log(res);
+    }).catch(e => {
+      console.error(e);
+    })
   }
 
   useEffect(() => {
@@ -87,7 +113,6 @@ export function TodosPage():JSX.Element{
               placeholder="할 일을 입력하세요"
               value={todoTitle}
               onChange={changeTodoTitle}
-              multiline
               variant="outlined"
             />
             <TextField
@@ -105,7 +130,7 @@ export function TodosPage():JSX.Element{
       </Grid>
       
       <Grid item xs={8}>
-        <TodosList todos={todos}/>
+        <TodosList todos={todos} loadTodos={loadTodos}/>
       </Grid>
       
     </Grid>

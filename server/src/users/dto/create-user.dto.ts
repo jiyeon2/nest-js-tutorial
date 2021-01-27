@@ -10,4 +10,6 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsEmail()
   email: string;
+
+  kakaoId?: number;
 }

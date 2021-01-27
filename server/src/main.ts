@@ -14,18 +14,12 @@ async function bootstrap() {
   //     transform: true,
   //   }),
   // );
-  const whiteList = ['https://localhost:3000', 'http://localhost:3000'];
+  const whiteList = ['http://localhost:3000'];
   app.enableCors({
     origin: whiteList,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
-  app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Accept');
-    next();
-  });
+
   await app.listen(port);
   Logger.log(`server started running on http://localhost:${port}`, 'Bootstrap');
 }

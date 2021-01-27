@@ -6,9 +6,12 @@ import { UsersModule } from '../users/users.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { TokenEntity } from './entities/token.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([TokenEntity]),
     UsersModule, // usersService 사용하기 위해 임포트
     PassportModule.register({
       defaultStrategy: 'jwt',

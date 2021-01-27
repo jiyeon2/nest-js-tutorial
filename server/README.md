@@ -1,3 +1,8 @@
+jwt 이용한 로그인
+- [프론트에서 안전하게 로그인 처리하기 (ft. React)](https://velog.io/@yaytomato/%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%90%EC%84%9C-%EC%95%88%EC%A0%84%ED%95%98%EA%B2%8C-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EC%B2%98%EB%A6%AC%ED%95%98%EA%B8%B0#%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EB%A7%8C%EB%A3%8C-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EC%97%B0%EC%9E%A5-%EC%B2%98%EB%A6%AC%ED%95%98%EA%B8%B0)
+- [Refresh Token과 Sliding Sessions를 활용한 JWT의 보안 전략](https://blog.ull.im/engineering/2019/02/07/jwt-strategy.html)
+
+
 NestJS
 - main.ts : 여기서 시작, AppModule에서 어플리케이션 생성
 - AppModule : = root module, 다른 모듈 import 함. 모듈은 앱의 부분으로 하나의 역할을 담당한다. 인증담당 모듈이면 users module 이런식으로

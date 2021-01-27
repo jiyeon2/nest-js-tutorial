@@ -41,8 +41,16 @@ export class UsersService {
     return await this.findOne({ where: { username } });
   }
 
+  async findByKakaoId(kakaoId: number): Promise<UserDto> {
+    try {
+      return await this.usersRepository.findOne({ where: { kakaoId } });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   async create(createUserDto: CreateUserDto): Promise<UserDto> {
-    const { username, password, email } = createUserDto;
+    const { username, password, email, kakaoId } = createUserDto;
 
     const userInDB = await this.usersRepository.findOne({
       where: { username },
@@ -56,8 +64,10 @@ export class UsersService {
       username,
       password,
       email,
+      kakaoId,
     });
     await this.usersRepository.save(user);
+
     return toUserDto(user);
   }
 }

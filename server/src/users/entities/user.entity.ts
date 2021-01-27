@@ -24,6 +24,9 @@ export class UserEntity {
   })
   email: string;
 
+  @Column({ nullable: true })
+  kakaoId: number;
+
   @BeforeInsert()
   hashPassword = async () => {
     this.password = await bcrypt.hash(this.password, 10);

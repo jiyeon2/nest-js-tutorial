@@ -8,9 +8,10 @@ import {
   Checkbox,
   Button
 } from '@material-ui/core';
+import axios from 'axios';
 
-export function TodosList(props:{todos: Todo[]}):JSX.Element{
-  const {todos} = props;
+export function TodosList(props:{todos: Todo[], loadTodos: () => void}):JSX.Element{
+  const {todos, loadTodos} = props;
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
 
   const handleToggle = (value: string) => () => {
@@ -26,18 +27,33 @@ export function TodosList(props:{todos: Todo[]}):JSX.Element{
     setCheckedIds(newCheckedIds);
   }
 
-  function deleteTodos(){
-    // checkedIds 삭제 요청
-    // 완료 후 loadTodo
+
+  const deleteOneTodo = (id: string) => () => {
+    console.log('remove ', id);
+
+    const token = localStorage.getItem('accessToken');
+    if (!token){
+      console.log('토큰이 없습니다. 로그인하세요');
+    }
+
+    const config ={
+      headers: {Authorization: `Bearer ${token}`}
+    };
+
+    axios.delete(
+      `http://localhost:4000/todos/${id}`,
+      config
+      )
+    .then(res => {
+      console.log(res);
+      loadTodos();
+    })
+    .catch(error => console.error(error));
+    
   }
 
   return (
     <div>
-      <Button 
-      variant="contained" 
-      onClick={deleteTodos}
-      color="secondary"
-      >삭제</Button>
     <List dense>
     {todos.map(todo => {
       const {id, name, description} = todo;
@@ -56,6 +72,9 @@ export function TodosList(props:{todos: Todo[]}):JSX.Element{
               checked={checkedIds.indexOf(id) !== -1}
               inputProps={{'aria-labelledby': labelId}}
             />
+            <Button onClick={deleteOneTodo(id)} variant="contained" size="small">
+              삭제
+            </Button>
           </ListItemSecondaryAction>
         </ListItem>
       )

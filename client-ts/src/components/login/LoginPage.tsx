@@ -4,6 +4,7 @@ import {Visibility, VisibilityOff} from '@material-ui/icons';
 import {KakaoLogin} from './KakaoLogin';
 import {useHistory} from 'react-router-dom';
 import axios from 'axios';
+import {useUserLoginDispatch} from '../../contexts/UserContext';
 
 interface State{
   id: string;
@@ -12,6 +13,7 @@ interface State{
 }
 export function LoginPage():JSX.Element{
   const history = useHistory();
+  const dispatch = useUserLoginDispatch();
   const [values, setValues] = useState<State>({
     id: 'ann',
     password: 'ann',
@@ -37,11 +39,18 @@ export function LoginPage():JSX.Element{
       password: values.password
     }).then(res => {
       console.log(res.data);
-      localStorage.setItem('accessToken', res.data.access_token);
+      localStorage.setItem('userInfo', JSON.stringify(res.data));
+      dispatch({
+        type:'LOGIN',
+        username: res.data.username,
+        email: res.data.email,
+        isLoggedIn: true,
+        accessToken: res.data.access_token
+      })
       history.push('/todos');
     }).catch((error) => {
       console.error(error);
-      alert(error);
+      alert('존재하지 않는 아이디이거나 잘못된 비밀번호입니다');
     })
   }
   return (

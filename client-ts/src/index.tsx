@@ -2,10 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import {LoginUserContextProvider} from './contexts/UserContext';
 
 ReactDOM.render(
   <React.StrictMode>
+    <LoginUserContextProvider>
     <App />
+    </LoginUserContextProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );

@@ -20,7 +20,8 @@ import { TokenEntity } from './entities/token.entity';
     }), // 명시적으로 jwt strategy로 유저 인증하겠다
     JwtModule.register({
       secret: process.env.SECRETKEY,
-      signOptions: { expiresIn: process.env.EXPIRESIN },
+      signOptions: { expiresIn: '30m' },
+      // signOptions: { expiresIn: process.env.EXPIRESIN },
     }), // jwt 인증 관련 유틸리티 함수 제공하는 모듈, sign() 함수
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],

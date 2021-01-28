@@ -4,21 +4,24 @@ import {BrowserRouter, Switch, Route, Link as RouterLink} from 'react-router-dom
 import {Container, AppBar, Link, Paper, Grid, Typography, Button} from '@material-ui/core';
 import {TodosPage} from './components/todos/TodosPage';
 import {LoginPage} from './components/login/LoginPage';
-import {LoginUserContextProvider} from './contexts/UserContext';
 import axios from 'axios';
+import {useLoginUserState, useUserLoginDispatch} from './contexts/UserContext';
 
 function App() {
+  const {username, isLoggedIn} = useLoginUserState();
+  const dispatch = useUserLoginDispatch();
+
   function logout(){
     axios.post('http://localhost:4000/auth/logout')
     .then(res => {
-      console.log(res);
-      localStorage.setItem('accessToken','');
+      console.log('로그아웃');
+      localStorage.setItem('userInfo','');
+      dispatch({type: 'LOGOUT'});
     })
     .catch(e => console.error(e));
   }
 
   return (
-    <LoginUserContextProvider>
     <Container>
       <CssBaseLine/>
       <div className="App">
@@ -27,10 +30,13 @@ function App() {
             <Grid container justify="space-around" alignItems="center">
               <Link color="secondary" component={RouterLink} to="/">home</Link>
               <Link color="secondary" component={RouterLink} to="/todos">todos</Link>
-              <Link color="secondary" component={RouterLink} to="/login">login</Link>
-              <Link color="secondary" component={RouterLink} to="/signup">signup</Link>
-              <Typography>로그인 한 유저:</Typography>
-              <Button onClick={logout}>logout</Button>
+              <Link color="secondary" component={RouterLink} to="/signup">signup</Link> 
+              
+              {isLoggedIn 
+              ? <Button onClick={logout}>logout</Button>
+              : <Link color="secondary" component={RouterLink} to="/login">login</Link>
+              }
+              <Typography>로그인 한 유저:{username}</Typography>
             </Grid>
           </AppBar>
 
@@ -54,7 +60,6 @@ function App() {
         </BrowserRouter>
       </div>
     </Container>
-    </LoginUserContextProvider>
   );
 }
 

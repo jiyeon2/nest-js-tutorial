@@ -3,6 +3,7 @@ import axios from 'axios';
 import React, {useState} from 'react';
 import {useHistory} from 'react-router-dom';
 import KaKaoLogin from 'react-kakao-login';
+import {useUserLoginDispatch} from '../../contexts/UserContext';
 
 const token = "b951a66ca1bf15f3ac5a9c266d4a8af5";
 
@@ -12,6 +13,7 @@ export interface ExtendedWindow extends Window {
 declare let window : ExtendedWindow;
 
 export function KakaoLogin():JSX.Element{
+  const dispatch = useUserLoginDispatch();
   const history = useHistory();
   const {Kakao} = window;
 
@@ -40,6 +42,13 @@ export function KakaoLogin():JSX.Element{
     ).then(response => {
       const {accessToken} = response.data;
       localStorage.setItem('accessToken', accessToken);
+      dispatch({
+        type: 'LOGIN',
+        username: param.username,
+        email: param.email,
+        isLoggedIn: true,
+        accessToken
+      })
       history.push('/todos');
     }).catch(e => {
       console.error(e);

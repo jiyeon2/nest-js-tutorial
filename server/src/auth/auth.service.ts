@@ -11,6 +11,7 @@ import { KakaoLoginDto } from 'src/users/dto/kakao-login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenEntity } from './entities/token.entity';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -21,16 +22,53 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async getAuthenticatedUser(username: string, plainTextPassword: string) {
+    try {
+      const user = await this.usersService.findByUsername(username);
+      await this.verifyPassword(plainTextPassword, user.password);
+      user.password = undefined;
+      return user;
+    } catch (e) {
+      throw new HttpException(
+        'wrong credentials provide',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  getCookieWithJwtToken(userId: string) {
+    const payload = { userId };
+    const token = this.jwtService.sign(payload);
+    return `Authentication=${token}; HttpOnly; Path=/ Max-Age=${
+      1000 * 60 * 60
+    }`;
+  }
+
+  async verifyPassword(plainTextPassword: string, hashedPassword: string) {
+    const isPasswordMatching = await bcrypt.compare(
+      plainTextPassword,
+      hashedPassword,
+    );
+    if (!isPasswordMatching) {
+      throw new HttpException(
+        'wrong credentials provide',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   async register(userDto: CreateUserDto): Promise<RegistrationStatus> {
     let status = {
       success: true,
       message: 'user registered',
+      user: null,
     };
 
     try {
-      await this.usersService.create(userDto);
+      status.user = await this.usersService.create(userDto);
     } catch (error) {
       status = {
+        ...status,
         success: false,
         message: error.message,
       };
@@ -41,7 +79,7 @@ export class AuthService {
   // jwt strategy에서 유저 유효한지 확인할 때 사용
   async validateUser(payload: JwtPayload): Promise<UserDto> {
     const user = await this.usersService.findByPayload(payload);
-    // passport.js 미들웨어가 거친 후 토큰이 유효한 경우에 한해 JwtStrategy.validate()함수에서 호출된다
+    // passport 미들웨어 실행 후 토큰이 유효한 경우에 한해 JwtStrategy.validate()함수에서 호출된다
     if (!user) {
       throw new HttpException('invalid token', HttpStatus.UNAUTHORIZED);
     }
@@ -54,7 +92,7 @@ export class AuthService {
     // 토큰생성
     const accessToken = this._createToken(user);
     const refreshToken = this._createRefreshToken(user);
-    await this.saveRefreshToken(user.username, refreshToken.refreshToken);
+    await this.saveRefreshToken(user.username, refreshToken);
     return { username: user.username, ...refreshToken, ...accessToken };
   }
 
@@ -72,13 +110,14 @@ export class AuthService {
     }
     const accessToken = this._createToken(user);
     const refreshToken = this._createRefreshToken(user);
-    await this.saveRefreshToken(user.username, refreshToken.refreshToken);
+    await this.saveRefreshToken(user.username, refreshToken);
     return { username: user.username, ...refreshToken, ...accessToken };
   }
 
   async logout(username: string) {
     try {
-      await this.tokensRepository.delete({ username });
+      const token = await this.tokensRepository.find({ username });
+      await this.tokensRepository.remove(token);
       return true;
     } catch (e) {
       throw new HttpException(e, HttpStatus.BAD_REQUEST);
@@ -86,21 +125,40 @@ export class AuthService {
   }
 
   async refreshToken(oldToken) {
-    // refreshToken 확인 후 새로운 accesstoken 발급하기
-    return oldToken;
+    try {
+      const verifiedTokenInfo = await this.jwtService.verifyAsync(oldToken);
+      const user = await this.usersService.findByPayload({
+        username: verifiedTokenInfo.username,
+      });
+      const newAccessToken = this._createToken(user);
+      return newAccessToken;
+    } catch (e) {
+      throw new HttpException('리프레시 토큰 만료', HttpStatus.BAD_REQUEST); // -> 클라이언트에서 로그인창으로 이동시키기
+    }
   }
 
-  async saveRefreshToken(username, token) {
+  async saveRefreshToken(username, tokenInfo) {
+    const { refreshToken, expiresIn } = tokenInfo;
+
     // tokenRepository에 리프레시 토큰을 저장
     const tokenFound = await this.tokensRepository.find({ username });
     if (tokenFound) {
       await this.tokensRepository.delete({ username });
     }
-    return await this.tokensRepository.save({ username, token });
+
+    //https://ichi.pro/ko/nestjs-aegseseu-mich-saelo-gochim-tokeun-jwt-injeung-guhyeon-166728990752775
+    const expiration = new Date();
+    expiration.setTime(expiration.getTime() + expiresIn);
+    return await this.tokensRepository.save({
+      username,
+      token: refreshToken,
+      is_revoked: false,
+      expires: expiration,
+    });
   }
 
-  private _createToken({ username, email }: UserDto) {
-    const user: JwtPayload = { username, email };
+  private _createToken({ username }: UserDto) {
+    const user: JwtPayload = { username };
     // payload는 내용
     const accessToken = this.jwtService.sign(user);
     // accessToken 은 할당된 토큰과 현재 유저의 이름(username)반환한다
@@ -112,9 +170,11 @@ export class AuthService {
 
   private _createRefreshToken({ username }: UserDto) {
     const user = { username };
-    const refreshToken = this.jwtService.sign(user);
-    return {
+    const refreshToken = this.jwtService.sign(user, {
       expiresIn: '14d',
+    });
+    return {
+      expiresIn: 1000 * 60 * 60 * 24 * 14, // '14d'
       refreshToken,
     };
   }

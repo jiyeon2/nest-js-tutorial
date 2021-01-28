@@ -4,6 +4,7 @@ import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import {TodosList} from './TodosList';
 import {useHistory} from 'react-router-dom';
 import axios, {AxiosError} from 'axios';
+import axiosInstance from '../../util/axiosInterceptor';
 
 const useTodosFormStyle = makeStyles((theme: Theme) => createStyles({
   form: {
@@ -40,6 +41,7 @@ export function TodosPage():JSX.Element{
     axios.get('http://localhost:4000/todos')
     .then(res => {
       const {todos} = res.data;
+      console.log(todos);
       setTodos(todos);
     });
   }
@@ -53,27 +55,14 @@ export function TodosPage():JSX.Element{
   }
 
   function addTodo(){
-    
-    const token = localStorage.getItem('accessToken');
-
-    if (!token){
-      alert('로그인 후 작성이 가능합니다. 로그인 해주세요');
-      history.push('/login');
-    }
-
-    const config ={
-      headers: {Authorization: `Bearer ${token}`}
-    };
-
     const param = {
       name: todoTitle,
       description: todoDesc
     }
 
-    axios.post(
-      'http://localhost:4000/todos',
+    axiosInstance.post(
+      '/todos',
       param,
-      config
     ).then(res => {
       if (res.status === 201){
         setTodoDesc('');
@@ -81,23 +70,11 @@ export function TodosPage():JSX.Element{
         loadTodos();
       }
     }).catch((e:AxiosError) => {
-      if (e.response?.status === 401){
-        localStorage.setItem('accessToken','');
-        alert('토큰이 만료되었습니다');
-        // 만약 로그아웃 안했으면
-        refreshToken();
-        // history.push('/login');
-      }
-    });
+      console.error(e);
+        alert(e);
+      });
   }
 
-  function refreshToken(){
-    axios.post('http://localhost:4000/auth/refresh-token').then(res => {
-      console.log(res);
-    }).catch(e => {
-      console.error(e);
-    })
-  }
 
   useEffect(() => {
     loadTodos();

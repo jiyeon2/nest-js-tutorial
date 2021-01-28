@@ -20,12 +20,46 @@ export class UsersService {
     return toUserDto(user);
   }
 
+  async getById(id: string) {
+    const user = await this.usersRepository.findOne({ id });
+    if (user) {
+      console.log('get by id', user);
+      return user;
+    }
+    throw new HttpException(
+      'User with this id does not exist',
+      HttpStatus.NOT_FOUND,
+    );
+  }
+
+  async findByEmail(email: string) {
+    const user = await this.usersRepository.findOne({ email });
+    if (user) {
+      return user;
+    }
+    throw new HttpException(
+      'User with this email does not exist',
+      HttpStatus.NOT_FOUND,
+    );
+  }
+
+  async findByUsername(username: string) {
+    const user = await this.usersRepository.findOne({ username });
+    if (user) {
+      return user;
+    }
+    throw new HttpException(
+      'User with this email does not exist',
+      HttpStatus.NOT_FOUND,
+    );
+  }
+
   // 유저가 로그인할때 auth service에서 사용
   async findByLogin({ username, password }: LoginUserDto): Promise<UserDto> {
     const user = await this.usersRepository.findOne({ where: { username } });
 
     if (!user) {
-      throw new HttpException('user not found', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('user not found', HttpStatus.NOT_FOUND);
     }
 
     const areEqual = await comparePasswords(user.password, password);

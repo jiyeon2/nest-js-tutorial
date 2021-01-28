@@ -10,6 +10,7 @@ import {
   ValidationPipe,
   Req,
   Res,
+  HttpCode,
 } from '@nestjs/common';
 import express from 'express';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -20,6 +21,8 @@ import { RegistrationStatus } from './interface/registration-status.interface';
 import { LoginUserDto } from 'src/users/dto/login-user.dto';
 import { KakaoLoginDto } from '../users/dto/kakao-login.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { UserEntity } from 'src/users/entities/user.entity';
+import RequestWithUser from './interface/requestWithUser.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -36,6 +39,22 @@ export class AuthController {
     return result;
   }
 
+  // @HttpCode(200)
+  // @UseGuards(LocalAuthGuard)
+  // @Post('log-in')
+  // async logIn(
+  //   @Req() request: RequestWithUser,
+  //   @Res() response: express.Response,
+  // ) {
+  //   const { user } = request;
+  //   const cookie = this.authService.getCookieWithJwtToken(user.id);
+  //   response.setHeader('Set-Cookie', cookie);
+  //   user.password = undefined;
+  //   return response.send(user);
+  // }
+
+  @HttpCode(200)
+  @UseGuards(LocalAuthGuard)
   @Post('login')
   public async login(
     @Body() loginUserDto: LoginUserDto,
@@ -47,9 +66,10 @@ export class AuthController {
       accessToken,
     } = await this.authService.login(loginUserDto);
     // user에 토큰 붙여서 보내줌
-    res.cookie('refresh_token', refreshToken, { httpOnly: true });
+    // res.cookie('refresh_token', refreshToken, { httpOnly: true }); // req.cookie none으로 들어와서 일단 로컬스토리지에 저장할거임
     res.send({
       access_token: accessToken,
+      refresh_token: refreshToken,
       username,
     });
   }
@@ -72,6 +92,7 @@ export class AuthController {
     });
   }
 
+  @HttpCode(200)
   @Post('logout')
   async logout(@Body('username') username: string) {
     return await this.authService.logout(username);
@@ -84,11 +105,7 @@ export class AuthController {
   }
 
   @Post('refresh-token')
-  async refreshToken(@Request() req: express.Request) {
-    // refreshToken으로 accessToken을 요청한다
-    // refreshToken이 정상적인 토큰인지?
-    // refreshToken이 해당 username과 함께 db에 저장되어 있는지?
-    // 확인한 후 accessToken을 다시 발급한다
-    // refreshToken이 비정상이거나 만료된경우 front에 다시 로그인해야함을 알린다
+  async refreshToken(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refreshToken(refreshToken);
   }
 }

@@ -7,4 +7,10 @@ export class TokenEntity {
 
   @Column({ type: 'varchar', nullable: false })
   username: string;
+
+  @Column({ default: false })
+  is_revoked: boolean;
+
+  @Column()
+  expires: Date;
 }

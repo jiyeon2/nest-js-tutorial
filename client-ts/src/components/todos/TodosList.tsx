@@ -9,6 +9,7 @@ import {
   Button
 } from '@material-ui/core';
 import axios from 'axios';
+import axiosInstance from '../../util/axiosInterceptor';
 
 export function TodosList(props:{todos: Todo[], loadTodos: () => void}):JSX.Element{
   const {todos, loadTodos} = props;
@@ -30,19 +31,8 @@ export function TodosList(props:{todos: Todo[], loadTodos: () => void}):JSX.Elem
 
   const deleteOneTodo = (id: string) => () => {
     console.log('remove ', id);
-
-    const token = localStorage.getItem('accessToken');
-    if (!token){
-      console.log('토큰이 없습니다. 로그인하세요');
-    }
-
-    const config ={
-      headers: {Authorization: `Bearer ${token}`}
-    };
-
-    axios.delete(
-      `http://localhost:4000/todos/${id}`,
-      config
+    axiosInstance.delete(
+      `/todos/${id}`,
       )
     .then(res => {
       console.log(res);

@@ -6,15 +6,12 @@ import {
   Put,
   Param,
   Delete,
-  ValidationPipe,
-  UsePipes,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import { CreateTodoDto } from './dto/todo.create.dto';
 import { TodoDto } from './dto/todo.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { UserDto } from 'src/users/dto/user.dto';
 import { TodoListDto } from './dto/todoList.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -55,7 +52,10 @@ export class TodosController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async destroy(@Param('id') id: string) {
-    return await this.todosService.destroyTodo(id);
+  async destroy(
+    @Param('id') todoId: string,
+    @Body('username') username: string,
+  ) {
+    return await this.todosService.destroyTodo(todoId, username);
   }
 }

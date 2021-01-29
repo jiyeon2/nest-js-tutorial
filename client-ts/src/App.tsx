@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import CssBaseLine from '@material-ui/core/CssBaseline';
 import {BrowserRouter, Switch, Route, Link as RouterLink} from 'react-router-dom';
 import {Container, AppBar, Link, Paper, Grid, Typography, Button} from '@material-ui/core';
@@ -6,6 +6,7 @@ import {TodosPage} from './components/todos/TodosPage';
 import {LoginPage} from './components/login/LoginPage';
 import axios from 'axios';
 import {useLoginUserState, useUserLoginDispatch} from './contexts/UserContext';
+import { SignupPage } from './components/signup/SignupPage';
 
 function App() {
   const {username, isLoggedIn} = useLoginUserState();
@@ -20,6 +21,20 @@ function App() {
     })
     .catch(e => console.error(e));
   }
+
+  useEffect(() => {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo){
+      const userInfoObj = JSON.parse(userInfo);
+      dispatch({
+        type:'LOGIN',
+        isLoggedIn: true,
+        username: userInfoObj.username,
+        email: userInfoObj.email,
+        accessToken: userInfoObj.access_token,
+      })
+    }
+  },[])
 
   return (
     <Container>
@@ -52,7 +67,7 @@ function App() {
                 <LoginPage />
               </Route>
               <Route path="/signup">
-                signup
+                <SignupPage />
               </Route>
             </Switch>
           </Paper>

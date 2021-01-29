@@ -6,12 +6,15 @@ import {
   ListItemSecondaryAction,
   ListItemText,
   Checkbox,
-  Button
+  Button,
+  Typography
 } from '@material-ui/core';
 import axios from 'axios';
 import axiosInstance from '../../util/axiosInterceptor';
+import {useLoginUserState} from '../../contexts/UserContext';
 
 export function TodosList(props:{todos: Todo[], loadTodos: () => void}):JSX.Element{
+  const loginUserState = useLoginUserState();
   const {todos, loadTodos} = props;
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
 
@@ -29,16 +32,23 @@ export function TodosList(props:{todos: Todo[], loadTodos: () => void}):JSX.Elem
   }
 
 
-  const deleteOneTodo = (id: string) => () => {
-    console.log('remove ', id);
+  const deleteOneTodo = (todoId: string, username: string) => () => {
+    console.log('remove ', todoId);
     axiosInstance.delete(
-      `/todos/${id}`,
+      `/todos/${todoId}`,{
+        data:{username}
+      }
       )
     .then(res => {
       console.log(res);
       loadTodos();
     })
-    .catch(error => console.error(error));
+    .catch(error => {
+      if (error.response.status === 401){
+        alert('본인이 생성한 todo만 삭제할 수 있습니다')
+      }
+      console.error(error);
+    });
     
   }
 
@@ -46,23 +56,28 @@ export function TodosList(props:{todos: Todo[], loadTodos: () => void}):JSX.Elem
     <div>
     <List dense>
     {todos.map(todo => {
-      const {id, name, description} = todo;
-      const labelId = `checkbox-list-label-${id}`;
+      const {id: todoId, name:todoTitle, description, user} = todo;
+      const labelId = `checkbox-list-label-${todoId}`;
       return (
-        <ListItem key={id} button>
-          <ListItemText 
+        <ListItem key={todoId} button>
+          <ListItemText
             id={labelId}
-            primary={name} 
-            secondary={description}
+            primary={todoTitle} 
+            secondary={
+            <>
+              <Typography component="span" variant="body2">{`${user.username}`}</Typography>
+              <Typography component="span">{` - ${description}`}</Typography>
+            </>
+            }
           />
           <ListItemSecondaryAction>
             <Checkbox
-              edge="end"
-              onChange={handleToggle(id)}
-              checked={checkedIds.indexOf(id) !== -1}
+              edge="start"
+              onChange={handleToggle(todoId)}
+              checked={checkedIds.indexOf(todoId) !== -1}
               inputProps={{'aria-labelledby': labelId}}
             />
-            <Button onClick={deleteOneTodo(id)} variant="contained" size="small">
+            <Button onClick={deleteOneTodo(todoId, loginUserState.username)} variant="contained" size="small">
               삭제
             </Button>
           </ListItemSecondaryAction>

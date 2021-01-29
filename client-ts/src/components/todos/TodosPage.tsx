@@ -22,12 +22,18 @@ export interface Task{
   name: string;
   createdOn?: Date;
 }
+export interface User extends Record<string, any>{
+  id: string;
+  username: string;
+  email: string;
+}
 export interface Todo{
   id: string;
   name: string;
   description?: string;
   createdOn?: Date;
   tasks?: Task[];
+  user: User;
 }
 
 export function TodosPage():JSX.Element{

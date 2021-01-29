@@ -7,9 +7,9 @@ import { UserEntity } from '../users/entities/user.entity';
 
 // todoEntity를 todoDto에 매핑시키기위한 유틸리티 함수
 export const toTodoDto = (data: TodoEntity): TodoDto => {
-  const { id, name, description, tasks } = data;
+  const { id, name, description, tasks, user } = data;
 
-  let todoDto: TodoDto = { id, name, description };
+  let todoDto: TodoDto = { id, name, description, user };
 
   if (tasks) {
     todoDto = {

@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { TaskEntity } from './task.entity';
 import { UserEntity } from '../../users/entities/user.entity';
@@ -30,6 +31,6 @@ export class TodoEntity {
   @OneToMany((type) => TaskEntity, (task) => task.todo)
   tasks?: TaskEntity[];
 
-  @ManyToOne((type) => UserEntity)
-  owner?: UserEntity;
+  @ManyToOne((type) => UserEntity, (user) => user.todos)
+  user?: UserEntity;
 }

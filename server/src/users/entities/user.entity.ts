@@ -1,5 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  BeforeInsert,
+  OneToMany,
+} from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { TodoEntity } from 'src/todos/entities/todo.entity';
 @Entity('user')
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -26,6 +33,9 @@ export class UserEntity {
 
   @Column({ nullable: true })
   kakaoId: number;
+
+  @OneToMany((type) => TodoEntity, (todo) => todo.user)
+  todos?: TodoEntity[];
 
   @BeforeInsert()
   hashPassword = async () => {

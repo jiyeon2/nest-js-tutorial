@@ -88,6 +88,7 @@ export class AuthController {
     res.cookie('refresh_token', refreshToken, { httpOnly: true });
     res.send({
       access_token: accessToken,
+      refresh_token: refreshToken,
       username,
     });
   }

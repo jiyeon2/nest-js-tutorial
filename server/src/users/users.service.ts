@@ -15,6 +15,8 @@ export class UsersService {
     private readonly usersRepository: Repository<UserEntity>,
   ) {}
 
+  private MAX_LOGIN_COUNT = 5;
+
   async findOne(options?: Record<string, unknown>): Promise<UserDto> {
     const user = await this.usersRepository.findOne(options);
     return toUserDto(user);
@@ -49,7 +51,7 @@ export class UsersService {
       return user;
     }
     throw new HttpException(
-      'User with this email does not exist',
+      'User with this username does not exist',
       HttpStatus.NOT_FOUND,
     );
   }
@@ -103,5 +105,41 @@ export class UsersService {
     await this.usersRepository.save(user);
 
     return toUserDto(user);
+  }
+
+  async changePasswordAndUnlock(username: string, newPassword) {
+    const user = this.findByUsername(username);
+    if (user) {
+      console.log(newPassword);
+    }
+  }
+
+  async checkLoginTryCount(username: string): Promise<[number, boolean]> {
+    // 해당 유저의 로그인 시도 정보를 찾고 업데이트함
+    //MAX_LOGIN_COUNT 회 이상 틀리면 user lock 됨
+    const user = await this.findByUsername(username);
+    try {
+      if (user.loginFailCount >= this.MAX_LOGIN_COUNT) {
+        await this.usersRepository.update(
+          { username: user.username },
+          { isLocked: true, latestLoginTryDate: new Date() },
+        );
+      } else {
+        await this.usersRepository.update(
+          { username: user.username },
+          {
+            loginFailCount: user.loginFailCount + 1,
+            latestLoginTryDate: new Date(),
+          },
+        );
+      }
+      return [user.loginFailCount, user.isLocked];
+    } catch (e) {
+      console.error('error in check login count updating ', e);
+      throw new HttpException(
+        'error in check login count updating ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

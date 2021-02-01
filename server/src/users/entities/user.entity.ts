@@ -31,6 +31,18 @@ export class UserEntity {
   })
   email: string;
 
+  @Column({ type: 'integer', default: 0 })
+  loginFailCount: number;
+
+  @Column({ type: 'bool', default: false })
+  isLocked: boolean;
+
+  @Column({ nullable: true })
+  latestLoginTryDate: Date; // 로그인 시도 제한 횟수
+
+  @Column({ default: 0 })
+  lockCount: number;
+
   @Column({ nullable: true })
   kakaoId: number;
 

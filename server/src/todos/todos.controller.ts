@@ -15,13 +15,14 @@ import { TodoDto } from './dto/todo.dto';
 import { UserDto } from 'src/users/dto/user.dto';
 import { TodoListDto } from './dto/todoList.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import express from 'express';
 
 @Controller('todos')
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Get()
-  async findAll(): Promise<TodoListDto> {
+  async findAll(@Req() req: express.Request): Promise<TodoListDto> {
     const todos = await this.todosService.getAllTodo();
     return { todos };
   }

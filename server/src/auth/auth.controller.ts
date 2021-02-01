@@ -11,6 +11,8 @@ import {
   Req,
   Res,
   HttpCode,
+  UseInterceptors,
+  UseFilters,
 } from '@nestjs/common';
 import express from 'express';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -23,7 +25,7 @@ import { KakaoLoginDto } from '../users/dto/kakao-login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/users/entities/user.entity';
 import RequestWithUser from './interface/requestWithUser.interface';
-
+import { HttpExceptionFilter } from './filter/http-exception.filter';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -55,9 +57,11 @@ export class AuthController {
 
   @HttpCode(200)
   @UseGuards(LocalAuthGuard)
+  @UseFilters(HttpExceptionFilter)
   @Post('login')
   public async login(
     @Body() loginUserDto: LoginUserDto,
+    @Req() req: express.Request,
     @Res() res: express.Response,
   ) {
     const {
@@ -65,7 +69,7 @@ export class AuthController {
       username,
       accessToken,
     } = await this.authService.login(loginUserDto);
-    // user에 토큰 붙여서 보내줌
+
     // res.cookie('refresh_token', refreshToken, { httpOnly: true }); // req.cookie none으로 들어와서 일단 로컬스토리지에 저장할거임
     res.send({
       access_token: accessToken,

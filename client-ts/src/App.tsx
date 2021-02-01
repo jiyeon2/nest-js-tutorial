@@ -13,7 +13,7 @@ function App() {
   const dispatch = useUserLoginDispatch();
 
   function logout(){
-    axios.post('http://localhost:4000/auth/logout')
+    axios.post('http://localhost:4000/auth/logout', { withCredentials: true })
     .then(res => {
       console.log('로그아웃');
       localStorage.setItem('userInfo','');

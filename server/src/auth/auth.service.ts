@@ -27,10 +27,15 @@ export class AuthService {
       const user = await this.usersService.findByUsername(username);
       await this.verifyPassword(plainTextPassword, user.password);
       user.password = undefined;
+
+      if (user.isLocked) {
+        throw new HttpException('user is locked', HttpStatus.BAD_REQUEST);
+      }
+
       return user;
     } catch (e) {
       throw new HttpException(
-        'wrong credentials provide',
+        ` ${e.response}, wrong credentials provide`,
         HttpStatus.BAD_REQUEST,
       );
     }

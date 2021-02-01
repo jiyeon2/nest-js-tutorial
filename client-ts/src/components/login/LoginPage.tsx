@@ -3,7 +3,7 @@ import {Grid, FormControl, InputLabel, IconButton, InputAdornment, OutlinedInput
 import {Visibility, VisibilityOff} from '@material-ui/icons';
 import {KakaoLogin} from './KakaoLogin';
 import {useHistory} from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../util/axiosInstance';
 import {useUserLoginDispatch} from '../../contexts/UserContext';
 
 interface State{
@@ -37,7 +37,7 @@ export function LoginPage():JSX.Element{
     axios.post('http://localhost:4000/auth/login',{
       username: values.id,
       password: values.password
-    }).then(res => {
+    },{ withCredentials: true }).then(res => {
       console.log(res.data);
       localStorage.setItem('userInfo', JSON.stringify(res.data));
       dispatch({
@@ -50,7 +50,18 @@ export function LoginPage():JSX.Element{
       history.push('/todos');
     }).catch((error) => {
       console.error(error);
-      alert('존재하지 않는 아이디이거나 잘못된 비밀번호입니다');
+      if (error.response){
+        console.log(error.response.data);
+        const {loginTryCount, isLocked} = error.response.data;
+        if (loginTryCount){
+          alert(`비밀번호를 ${loginTryCount}번 틀렸습니다.`);
+        } else if (isLocked){
+          alert(`비밀번호를 5번 틀려서 로그인이 불가능합니다`);
+        } else {
+          alert('존재하지 않는 아이디이거나 잘못된 비밀번호입니다');
+        }
+      }
+     
     })
   }
   return (

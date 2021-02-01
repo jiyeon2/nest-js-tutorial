@@ -3,7 +3,8 @@ import {Grid, TextField, Button} from '@material-ui/core';
 import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import {TodosList} from './TodosList';
 import {useHistory} from 'react-router-dom';
-import axios, {AxiosError} from 'axios';
+import {AxiosError} from 'axios';
+import axios from '../../util/axiosInstance';
 import axiosInstance from '../../util/axiosInterceptor';
 
 const useTodosFormStyle = makeStyles((theme: Theme) => createStyles({

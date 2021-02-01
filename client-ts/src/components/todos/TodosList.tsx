@@ -9,7 +9,6 @@ import {
   Button,
   Typography
 } from '@material-ui/core';
-import axios from 'axios';
 import axiosInstance from '../../util/axiosInterceptor';
 import {useLoginUserState} from '../../contexts/UserContext';
 

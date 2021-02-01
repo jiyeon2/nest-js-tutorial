@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TodosModule } from './todos/todos.module';
+import { RateLimiterModule } from 'nestjs-rate-limit';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TodosModule } from './todos/todos.module';
     AuthModule,
     UsersModule,
     TodosModule,
+    RateLimiterModule,
   ],
   controllers: [AppController],
   providers: [],

@@ -1,5 +1,5 @@
 import { Button } from '@material-ui/core';
-import axios from 'axios';
+import axios from '../../util/axiosInstance';
 import React, {useState} from 'react';
 import {useHistory} from 'react-router-dom';
 import KaKaoLogin from 'react-kakao-login';
@@ -25,7 +25,8 @@ export function KakaoLogin():JSX.Element{
     }
     axios.post(
       'http://localhost:4000/auth/kakaoLogin',
-      param
+      param,
+      { withCredentials: true }
     ).then(response => {
       const userInfo = response.data;
       localStorage.setItem('userInfo', JSON.stringify(userInfo))

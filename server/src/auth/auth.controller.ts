@@ -25,7 +25,7 @@ import { KakaoLoginDto } from '../users/dto/kakao-login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/users/entities/user.entity';
 import RequestWithUser from './interface/requestWithUser.interface';
-import { HttpExceptionFilter } from './filter/http-exception.filter';
+import { HttpExceptionFilter } from '../filter/http-exception.filter';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

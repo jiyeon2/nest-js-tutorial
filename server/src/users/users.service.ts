@@ -7,12 +7,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 import { comparePasswords } from '../shared/utils';
-
+import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
+    private readonly mailerService: MailerService,
   ) {}
 
   private MAX_LOGIN_COUNT = 5;
@@ -138,6 +139,25 @@ export class UsersService {
       console.error('error in check login count updating ', e);
       throw new HttpException(
         'error in check login count updating ',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async sendMail(userEmail): Promise<void> {
+    console.log({ userEmail });
+    try {
+      await this.mailerService.sendMail({
+        to: userEmail, // list of receivers
+        from: 'noreply@nestjs.com', // sender address
+        subject: 'Testing Nest MailerModule ✔', // Subject line
+        text: 'welcome', // plaintext body
+        html: '<b>welcome</b>', // HTML body content
+      });
+    } catch (e) {
+      console.error(e);
+      throw new HttpException(
+        'send mail error',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

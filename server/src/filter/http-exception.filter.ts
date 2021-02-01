@@ -6,7 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, response, Response } from 'express';
-import { UsersService } from '../../users/users.service';
+import { UsersService } from '../users/users.service';
 
 // 로그인 시도 중 일어나는 에러(비밀번호 틀림, 없는 유저아이디 입력 등)
 // 에러 발생 시 해당 유저의 로그인 시도 정보 조회& 업데이트 후

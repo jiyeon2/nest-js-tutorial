@@ -198,7 +198,7 @@ export class AuthService {
   }
 
   //https://techlog.io/Server/Node-js/node-js%EC%97%90%EC%84%9C-%EC%9D%B4%EB%A9%94%EC%9D%BC-%EC%9D%B8%EC%A6%9D%EC%9D%84-%ED%86%B5%ED%95%9C-%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8-%EC%B4%88%EA%B8%B0%ED%99%94-%EA%B8%B0%EB%8A%A5-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0/
-  async createAuthCode(userId) {
+  async createAndSaveAuthCode(userId) {
     try {
       const authCode = crypto.randomBytes(20).toString('hex'); // token 생성
 
@@ -230,8 +230,8 @@ export class AuthService {
     }
   }
 
-  async sendMail(userId, userEmail): Promise<void> {
-    const authCode = await this.createAuthCode(userId);
+  async sendPasswordResetEmail(userId, userEmail): Promise<void> {
+    const authCode = await this.createAndSaveAuthCode(userId);
     console.log('auth.service - sendmail', { authCode });
     const mailOption = {
       to: userEmail, // list of receivers
@@ -289,6 +289,27 @@ export class AuthService {
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException('error in removeAuthCodeData');
+    }
+  }
+
+  async sendUserAuthEmail(email: string) {
+    const authCode = crypto.randomBytes(20).toString('hex'); // token 생성
+    console.log('auth.service - sendmail', { authCode });
+    const mailOption = {
+      to: email, // list of receivers
+      from: '"No Reply - NestJs 공부하는중" <nestjs-study@ing>',
+      subject: '유저 인증 코드', // Subject line
+      html: `유저 인증 코드는 다음과 같습니다. \n ${authCode} \n 인증코드창에 입력해주세요`,
+    };
+    try {
+      await this.mailerService.sendMail(mailOption);
+      return authCode;
+    } catch (e) {
+      console.error(e);
+      throw new HttpException(
+        'send mail error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

@@ -42,7 +42,7 @@ export function ResetPassword():JSX.Element{
       alert('비밀번호가 서로 다릅니다');
     } else {
       if(pwdRef.current){
-        axios.post('http://localhost:4000/auth/reset-password-by-mail',{
+        axios.post('http://localhost:4000/auth/reset-password-by-email',{
           code,
           password: pwdRef.current.value
         }).then(res => {

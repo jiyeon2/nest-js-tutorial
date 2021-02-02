@@ -129,7 +129,7 @@ export class AuthController {
       }
 
       const user = await this.usersService.findByEmail(email);
-      await this.authService.sendMail(user.id, email);
+      await this.authService.sendPasswordResetEmail(user.id, email);
       return {
         message: 'email sent',
       };
@@ -139,8 +139,8 @@ export class AuthController {
     }
   }
 
-  @Post('reset-password-by-mail')
-  async resetPasswordByMail(
+  @Post('reset-password-by-email')
+  async resetPasswordByEmail(
     @Body('code') authCode: string,
     @Body('password') password: string,
   ) {
@@ -168,5 +168,23 @@ export class AuthController {
     const validAuthCodeData = await this.authService.findAuthCode(authCode);
     console.log(validAuthCodeData);
     return validAuthCodeData;
+  }
+
+  @Post('send-user-auth-email')
+  async sendUserAuthEmail(@Body('email') email: string) {
+    console.log('send-user-auth-email', email);
+    try {
+      if (!email) {
+        throw new HttpException('email required', HttpStatus.BAD_REQUEST);
+      }
+      const authCode = await this.authService.sendUserAuthEmail(email);
+      return {
+        message: 'email sent',
+        authCode,
+      };
+    } catch (e) {
+      console.error(e, 'error');
+      throw new HttpException(e, HttpStatus.BAD_REQUEST);
+    }
   }
 }

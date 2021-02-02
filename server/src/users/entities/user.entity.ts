@@ -38,7 +38,7 @@ export class UserEntity {
   isLocked: boolean;
 
   @Column({ nullable: true })
-  latestLoginTryDate: Date; // 로그인 시도 제한 횟수
+  latestLoginTryDate: Date;
 
   @Column({ default: 0 })
   lockCount: number;

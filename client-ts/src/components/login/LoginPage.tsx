@@ -5,6 +5,7 @@ import {KakaoLogin} from './KakaoLogin';
 import {useHistory} from 'react-router-dom';
 import axios from '../../util/axiosInstance';
 import {useUserLoginDispatch} from '../../contexts/UserContext';
+import { UnblockRequest } from './UnblockRequest';
 
 interface State{
   id: string;
@@ -53,6 +54,8 @@ export function LoginPage():JSX.Element{
       if (error.response){
         console.log(error.response.data);
         const {loginTryCount, isLocked} = error.response.data;
+        // 맨 처음 틀렸을 때는 존재하지 않는 아이디거나 비밀번호가 뜨고
+        // 그 후에 1번 틀렸습니다가 뜸
         if (loginTryCount){
           alert(`비밀번호를 ${loginTryCount}번 틀렸습니다.`);
         } else if (isLocked){
@@ -101,6 +104,7 @@ export function LoginPage():JSX.Element{
         <Button onClick={login} variant="contained">로그인</Button>
         </section>
         <KakaoLogin/>
+        <UnblockRequest/>
     </Grid>
 
   );

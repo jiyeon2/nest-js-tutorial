@@ -7,6 +7,7 @@ import {LoginPage} from './components/login/LoginPage';
 import axios from 'axios';
 import {useLoginUserState, useUserLoginDispatch} from './contexts/UserContext';
 import { SignupPage } from './components/signup/SignupPage';
+import { ResetPassword } from './components/login/ResetPassword';
 
 function App() {
   const {username, isLoggedIn} = useLoginUserState();
@@ -68,6 +69,9 @@ function App() {
               </Route>
               <Route path="/signup">
                 <SignupPage />
+              </Route>
+              <Route path="/reset-password/:code">
+                <ResetPassword />
               </Route>
             </Switch>
           </Paper>

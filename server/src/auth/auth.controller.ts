@@ -13,10 +13,13 @@ import {
   HttpCode,
   UseInterceptors,
   UseFilters,
+  InternalServerErrorException,
+  Param,
 } from '@nestjs/common';
 import express from 'express';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth.service';
+import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { RegistrationStatus } from './interface/registration-status.interface';
@@ -26,9 +29,13 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/users/entities/user.entity';
 import RequestWithUser from './interface/requestWithUser.interface';
 import { LoginExceptionFilter } from '../filter/login-exception.filter';
+import { get } from 'http';
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('register')
   public async register(
@@ -114,11 +121,52 @@ export class AuthController {
     return this.authService.refreshToken(refreshToken);
   }
 
-  @Post('send-mail')
-  async sendMail(@Body('email') email: string) {
-    await this.authService.sendMail(email);
-    return {
-      message: 'email sent',
-    };
+  @Post('send-reset-password-mail')
+  async sendResetPasswordMail(@Body('email') email: string) {
+    try {
+      if (!email) {
+        throw new HttpException('email required', HttpStatus.BAD_REQUEST);
+      }
+
+      const user = await this.usersService.findByEmail(email);
+      await this.authService.sendMail(user.id, email);
+      return {
+        message: 'email sent',
+      };
+    } catch (e) {
+      console.error(e, 'error');
+      throw new HttpException(e, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('reset-password-by-mail')
+  async resetPasswordByMail(
+    @Body('code') authCode: string,
+    @Body('password') password: string,
+  ) {
+    try {
+      // auth 테이블에 해당 코드가 있는지 확인
+      const validAuthCodeData = await this.authService.findAuthCode(authCode);
+      // 해당 코드 발급받은 유저 정보(비밀번호, 시도횟수, 이용정지상태) 업데이트
+      await this.usersService.changePasswordAndUnlock(
+        validAuthCodeData.userId,
+        password,
+      );
+      // auth 테이블에서 해당 코드 삭제
+      await this.authService.removeAuthCodeData(validAuthCodeData);
+
+      return { message: 'password reset done' };
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('error in reset password');
+    }
+  }
+
+  @Get('code/:code')
+  async checkValidAuthCode(@Param('code') authCode: string) {
+    console.log({ authCode });
+    const validAuthCodeData = await this.authService.findAuthCode(authCode);
+    console.log(validAuthCodeData);
+    return validAuthCodeData;
   }
 }

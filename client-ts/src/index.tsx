@@ -5,11 +5,9 @@ import reportWebVitals from './reportWebVitals';
 import {LoginUserContextProvider} from './contexts/UserContext';
 
 ReactDOM.render(
-  <React.StrictMode>
     <LoginUserContextProvider>
     <App />
-    </LoginUserContextProvider>
-  </React.StrictMode>,
+    </LoginUserContextProvider>,
   document.getElementById('root')
 );
 

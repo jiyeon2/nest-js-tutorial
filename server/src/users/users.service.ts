@@ -7,6 +7,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 import { comparePasswords } from '../shared/utils';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -107,11 +108,14 @@ export class UsersService {
     return toUserDto(user);
   }
 
-  async changePasswordAndUnlock(username: string, newPassword) {
-    const user = this.findByUsername(username);
-    if (user) {
-      console.log(newPassword);
-    }
+  async changePasswordAndUnlock(userId, newPassword) {
+    const user = await this.getById(userId);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersRepository.update(user.id, {
+      loginFailCount: 0,
+      isLocked: false,
+      password: hashedPassword,
+    });
   }
 
   async checkLoginTryCount(username: string): Promise<[number, boolean]> {

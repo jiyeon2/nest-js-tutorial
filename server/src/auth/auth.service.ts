@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt'; // jwt payload를 할당하는 유틸리티 함수 가지고 있음
 import { JwtPayload } from './interface/payload.interface';
@@ -10,16 +15,20 @@ import 'dotenv/config';
 import { KakaoLoginDto } from 'src/users/dto/kakao-login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenEntity } from './entities/token.entity';
+import { AuthEntity } from './entities/auth.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(TokenEntity)
     private readonly tokensRepository: Repository<TokenEntity>,
+    @InjectRepository(AuthEntity)
+    private readonly authsRepository: Repository<AuthEntity>,
     private usersService: UsersService,
     private jwtService: JwtService,
     private readonly mailerService: MailerService,
@@ -188,22 +197,98 @@ export class AuthService {
     };
   }
 
-  async sendMail(userEmail): Promise<void> {
-    console.log({ userEmail });
+  //https://techlog.io/Server/Node-js/node-js%EC%97%90%EC%84%9C-%EC%9D%B4%EB%A9%94%EC%9D%BC-%EC%9D%B8%EC%A6%9D%EC%9D%84-%ED%86%B5%ED%95%9C-%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8-%EC%B4%88%EA%B8%B0%ED%99%94-%EA%B8%B0%EB%8A%A5-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0/
+  async createAuthCode(userId) {
     try {
-      await this.mailerService.sendMail({
-        to: userEmail, // list of receivers
-        from: 'noreply@nestjs.com', // sender address
-        subject: 'Testing Nest MailerModule ✔', // Subject line
-        text: 'welcome', // plaintext body
-        html: '<b>welcome</b>', // HTML body content
-      });
+      const authCode = crypto.randomBytes(20).toString('hex'); // token 생성
+
+      const oldCode = await this.authsRepository.findOne({ where: { userId } });
+      if (oldCode) {
+        // 이전 인증요청이 있는 경우 - 존재하는 인증요청 authCode, ttl만 업데이트
+        const updated = await this.authsRepository.update(
+          { userId },
+          { authCode, ttl: 300 },
+        );
+        console.log({ updated });
+      } else {
+        // 이전 인증요청이 없는 경우 - 새로 만들기
+        const data = {
+          authCode,
+          userId,
+          ttl: 300, // ttl 값 설정 (5분)
+        };
+        const newData = await this.authsRepository.save(data); // 데이터베이스 Auth 테이블에 데이터 입력
+        console.log({ newData });
+      }
+      return authCode;
+    } catch (e) {
+      console.error(e);
+      throw new HttpException(
+        'error in create auth code',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async sendMail(userId, userEmail): Promise<void> {
+    const authCode = await this.createAuthCode(userId);
+    console.log('auth.service - sendmail', { authCode });
+    const mailOption = {
+      to: userEmail, // list of receivers
+      from: '"No Reply - NestJs 공부하는중" <nestjs-study@ing>',
+      subject: '테스트 비밀번호 변경하기', // Subject line
+      html: `비밀번호 초기화를 위해 다음 링크를 클릭해주세요. 비밀번호 변경 페이지로 이동합니다 <a href="http://localhost:3000/reset-password/${authCode}">비밀번호 변경하기</a>`, // HTML body content
+    };
+    try {
+      await this.mailerService.sendMail(mailOption);
     } catch (e) {
       console.error(e);
       throw new HttpException(
         'send mail error',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  private isValidCode(authCode) {
+    console.log(authCode, authCode.created);
+    const createdTime = new Date(authCode.created);
+    const validTime = new Date(Date.now() - authCode.ttl);
+    console.log({ createdTime, validTime });
+    return Date.now() - authCode.ttl > authCode.created;
+  }
+
+  /**
+   * 입력받은 코드가 auth테이블에 있는지 확인
+   * @param code 유저가 메일로 받은 문자열(authCode)
+   */
+  async findAuthCode(code: string) {
+    console.log({ code });
+    try {
+      const authCodeData = await this.authsRepository.findOne({
+        authCode: code,
+      });
+
+      if (!authCodeData || !this.isValidCode(authCodeData)) {
+        //  해당 토큰이 존재하지 않는 경우, 토큰이 만료된 경우 처리할 api 필요
+        throw new HttpException(
+          'not such auth code or outdated code',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      return authCodeData;
+    } catch (e) {
+      console.error(e);
+      throw new HttpException('not valid auth code', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async removeAuthCodeData(authCodeEntity) {
+    try {
+      await this.authsRepository.remove(authCodeEntity);
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('error in removeAuthCodeData');
     }
   }
 }

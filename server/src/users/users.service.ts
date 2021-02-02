@@ -7,13 +7,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 import { comparePasswords } from '../shared/utils';
-import { MailerService } from '@nestjs-modules/mailer';
+
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
-    private readonly mailerService: MailerService,
   ) {}
 
   private MAX_LOGIN_COUNT = 5;
@@ -119,45 +118,24 @@ export class UsersService {
     // 해당 유저의 로그인 시도 정보를 찾고 업데이트함
     //MAX_LOGIN_COUNT 회 이상 틀리면 user lock 됨
     const user = await this.findByUsername(username);
+    let updateData: Record<string, any> = {
+      latestLoginTryDate: new Date(),
+    };
+    if (user.loginFailCount >= this.MAX_LOGIN_COUNT) {
+      updateData = { ...updateData, isLocked: true };
+    } else {
+      updateData = { ...updateData, loginFailCount: user.loginFailCount + 1 };
+    }
     try {
-      if (user.loginFailCount >= this.MAX_LOGIN_COUNT) {
-        await this.usersRepository.update(
-          { username: user.username },
-          { isLocked: true, latestLoginTryDate: new Date() },
-        );
-      } else {
-        await this.usersRepository.update(
-          { username: user.username },
-          {
-            loginFailCount: user.loginFailCount + 1,
-            latestLoginTryDate: new Date(),
-          },
-        );
-      }
+      await this.usersRepository.update(
+        { username: user.username },
+        updateData,
+      );
       return [user.loginFailCount, user.isLocked];
     } catch (e) {
       console.error('error in check login count updating ', e);
       throw new HttpException(
         'error in check login count updating ',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  async sendMail(userEmail): Promise<void> {
-    console.log({ userEmail });
-    try {
-      await this.mailerService.sendMail({
-        to: userEmail, // list of receivers
-        from: 'noreply@nestjs.com', // sender address
-        subject: 'Testing Nest MailerModule ✔', // Subject line
-        text: 'welcome', // plaintext body
-        html: '<b>welcome</b>', // HTML body content
-      });
-    } catch (e) {
-      console.error(e);
-      throw new HttpException(
-        'send mail error',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

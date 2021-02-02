@@ -13,7 +13,7 @@ import { UsersService } from '../users/users.service';
 // 로그인 시도가 5번 이하인 경우, 5번 초과인 경우 다른 응답메시지와 데이터를 보내
 // 프론트에서 다른 메시지 보여줌
 @Catch(HttpException)
-export class HttpExceptionFilter implements ExceptionFilter {
+export class LoginExceptionFilter implements ExceptionFilter {
   constructor(private usersService: UsersService) {}
 
   async catch(exception: HttpException, host: ArgumentsHost) {

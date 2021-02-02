@@ -3,18 +3,10 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import 'dotenv/config';
-
-const port = process.env.PORT;
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // app.useGlobalPipes(
-  //   new ValidationPipe({
-  //     whitelist: true,
-  //     forbidNonWhitelisted: true,
-  //     transform: true,
-  //   }),
-  // );
   const whiteList = ['http://localhost:3000'];
   app.enableCors({
     origin: whiteList,
@@ -28,6 +20,9 @@ async function bootstrap() {
     next();
   });
   app.use(cookieParser());
+
+  const configService = app.get(ConfigService);
+  const port = configService.get('PORT');
 
   await app.listen(port);
   Logger.log(`server started running on http://localhost:${port}`, 'Bootstrap');

@@ -25,7 +25,7 @@ import { KakaoLoginDto } from '../users/dto/kakao-login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/users/entities/user.entity';
 import RequestWithUser from './interface/requestWithUser.interface';
-import { HttpExceptionFilter } from '../filter/http-exception.filter';
+import { LoginExceptionFilter } from '../filter/login-exception.filter';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -57,7 +57,7 @@ export class AuthController {
 
   @HttpCode(200)
   @UseGuards(LocalAuthGuard)
-  @UseFilters(HttpExceptionFilter)
+  @UseFilters(LoginExceptionFilter)
   @Post('login')
   public async login(
     @Body() loginUserDto: LoginUserDto,
@@ -112,5 +112,13 @@ export class AuthController {
   @Post('refresh-token')
   async refreshToken(@Body('refreshToken') refreshToken: string) {
     return this.authService.refreshToken(refreshToken);
+  }
+
+  @Post('send-mail')
+  async sendMail(@Body('email') email: string) {
+    await this.authService.sendMail(email);
+    return {
+      message: 'email sent',
+    };
   }
 }

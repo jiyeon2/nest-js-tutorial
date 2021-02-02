@@ -12,6 +12,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TokenEntity } from './entities/token.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +22,8 @@ export class AuthService {
     private readonly tokensRepository: Repository<TokenEntity>,
     private usersService: UsersService,
     private jwtService: JwtService,
+    private readonly mailerService: MailerService,
+    private configService: ConfigService,
   ) {}
 
   async getAuthenticatedUser(username: string, plainTextPassword: string) {
@@ -168,7 +172,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(user);
     // accessToken 은 할당된 토큰과 현재 유저의 이름(username)반환한다
     return {
-      expiresIn: process.env.EXPIRESIN,
+      expiresIn: this.configService.get<string>('EXPIRESIN'), // process.env.EXPIRESIN,
       accessToken,
     };
   }
@@ -182,5 +186,24 @@ export class AuthService {
       expiresIn: 1000 * 60 * 60 * 24 * 14, // '14d'
       refreshToken,
     };
+  }
+
+  async sendMail(userEmail): Promise<void> {
+    console.log({ userEmail });
+    try {
+      await this.mailerService.sendMail({
+        to: userEmail, // list of receivers
+        from: 'noreply@nestjs.com', // sender address
+        subject: 'Testing Nest MailerModule ✔', // Subject line
+        text: 'welcome', // plaintext body
+        html: '<b>welcome</b>', // HTML body content
+      });
+    } catch (e) {
+      console.error(e);
+      throw new HttpException(
+        'send mail error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

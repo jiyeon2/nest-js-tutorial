@@ -124,7 +124,10 @@ export function SignupPage():JSX.Element{
             ? (
               <>
               <Field component={TextField} name="code" type="text" label="인증코드" />
-              <Button variant="contained">인증 코드 확인하기</Button>
+              <Button variant="contained"
+              disabled={errors.code || !values.code ? true: false}
+              onClick={}
+              >인증 코드 확인하기</Button>
               </>
               ): null
           }

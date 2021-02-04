@@ -1,3 +1,6 @@
+노드메일러로 메일 보내기
+어제는 되다가 오늘은 로그인이 안돼서 이 글 보고 oauth인증 방식으로 해결함[nodemailer와 gmail로 메일 발송하기 ㅡ OAuth2](https://blog.eunsatio.io/develop/nodemailer%EC%99%80-gmail%EB%A1%9C-%EB%A9%94%EC%9D%BC-%EB%B0%9C%EC%86%A1%ED%95%98%EA%B8%B0-%E3%85%A1-OAuth2)
+
 jwt 이용한 로그인
 - [프론트에서 안전하게 로그인 처리하기 (ft. React)](https://velog.io/@yaytomato/%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%90%EC%84%9C-%EC%95%88%EC%A0%84%ED%95%98%EA%B2%8C-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EC%B2%98%EB%A6%AC%ED%95%98%EA%B8%B0#%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EB%A7%8C%EB%A3%8C-%EB%A1%9C%EA%B7%B8%EC%9D%B8-%EC%97%B0%EC%9E%A5-%EC%B2%98%EB%A6%AC%ED%95%98%EA%B8%B0)
 - [Refresh Token과 Sliding Sessions를 활용한 JWT의 보안 전략](https://blog.ull.im/engineering/2019/02/07/jwt-strategy.html)

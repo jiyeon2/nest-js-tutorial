@@ -17,24 +17,19 @@ import { ConfigModule } from '@nestjs/config';
       transport: {
         service: 'gmail',
         host: 'smtp.gmail.com', //https://jetalog.net/72
-        port: 587,
-        secure: false,
+        port: 465,
+        secure: true,
         auth: {
+          type: 'OAuth2',
           user: process.env.GMAIL_ID,
-          pass: process.env.GMAIL_PWD,
+          clientId: process.env.GMAIL_CLIENT_ID,
+          clientSecret: process.env.GMAIL_CLIENT_SECRET,
+          refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+          accessToken: process.env.GMAIL_ACCESS_TOKEN,
+          expires: 3600,
         },
-      },
-      defaults: {
-        from: '"No Reply" <no-reply@localhost>',
       },
       // preview: true,
-      template: {
-        dir: process.cwd() + '/templates',
-        adapter: new HandlebarsAdapter(),
-        options: {
-          strict: true,
-        },
-      },
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',

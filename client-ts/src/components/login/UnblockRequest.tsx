@@ -32,14 +32,18 @@ export function UnblockRequest(){
       try{
         const email = emailRef.current.value; // 유효성 검사 후 제출여부 결정해야함
         console.log({email});
-        const response = await axios.post('http://localhost:4000/auth/send-reset-password-mail',
+        const response = await axios.post('http://localhost:4000/auth/send-reset-password-email',
         { email});
         console.log(response.data);
         
       } catch(e) {
-        console.error(e);
-        console.log(e.data);
-        alert('해당 email로 가입된 유저가 없습니다'); // 혹은 다른 이유
+        console.error(e.response);
+        if (e.response.status === 500){
+          // 서버내부오류, 혹은 다른 이유
+          alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요')
+        } else{
+          alert('해당 email로 가입된 유저가 없습니다'); 
+        }
       } finally{
         // emailRef.current.value = '';
       }

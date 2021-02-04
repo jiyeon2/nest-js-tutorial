@@ -121,7 +121,7 @@ export class AuthController {
     return this.authService.refreshToken(refreshToken);
   }
 
-  @Post('send-reset-password-mail')
+  @Post('send-reset-password-email')
   async sendResetPasswordMail(@Body('email') email: string) {
     try {
       if (!email) {
@@ -134,7 +134,11 @@ export class AuthController {
         message: 'email sent',
       };
     } catch (e) {
-      console.error(e, 'error');
+      console.error(e);
+      if (e.status === 500) {
+        // 메일전송에러
+        throw new HttpException(e.response, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
       throw new HttpException(e, HttpStatus.BAD_REQUEST);
     }
   }
@@ -174,9 +178,14 @@ export class AuthController {
   async sendUserAuthEmail(@Body('email') email: string) {
     console.log('send-user-auth-email', email);
     try {
+      // 라우트 핸들러에서 email 값의 여부를 확인하는것은 single responsibility rule에 어긋난다
+      // validator class 를 만들어서 처리할 수도 있지만, 핸들러 함수 전에 validator를 호출해야한다
+      // middleware는 execution context에 대한 정보가 없으므로 generic middleware 만드는 것은 불가능하다
+      // 이런 경우에 pipe를 사용한다
       if (!email) {
         throw new HttpException('email required', HttpStatus.BAD_REQUEST);
       }
+
       const authCode = await this.authService.sendUserAuthEmail(email);
       return {
         message: 'email sent',

@@ -144,4 +144,9 @@ export class UsersService {
       );
     }
   }
+
+  async isExistUsename(username: string) {
+    const user = await this.usersRepository.findOne({ username });
+    return !!user;
+  }
 }

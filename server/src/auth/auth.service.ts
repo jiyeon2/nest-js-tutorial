@@ -235,7 +235,7 @@ export class AuthService {
     console.log('auth.service - sendmail', { authCode });
     const mailOption = {
       to: userEmail, // list of receivers
-      from: '"No Reply - NestJs 공부하는중" <nestjs-study@ing>',
+      from: '"No Reply - NestJs 공부하는중" <jiyeon33lee@gmail.com>',
       subject: '테스트 비밀번호 변경하기', // Subject line
       html: `비밀번호 초기화를 위해 다음 링크를 클릭해주세요. 비밀번호 변경 페이지로 이동합니다 <a href="http://localhost:3000/reset-password/${authCode}">비밀번호 변경하기</a>`, // HTML body content
     };
@@ -302,7 +302,7 @@ export class AuthService {
       html: `유저 인증 코드는 다음과 같습니다. \n ${authCode} \n 인증코드창에 입력해주세요`,
     };
     try {
-      await this.mailerService.sendMail(mailOption);
+      // await this.mailerService.sendMail(mailOption);
       return authCode;
     } catch (e) {
       console.error(e);
